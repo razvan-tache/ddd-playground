@@ -344,6 +344,39 @@ class WalletControllerTest extends JsonApiTestCase
         self::assertEquals(404, $this->client->getResponse()->getStatusCode());
     }
 
+    /**
+     * @group integration
+     */
+    public function testTransferBadSenderUUIDAction()
+    {
+        $this->loginClient('jorge', 'iyoque123');
+
+        $this->client->request('POST',  '/api/v1/wallet/404/transfer.json', [
+            'receiverWalledUid' => '0cb00000-646e-11e6-a5a2-0000ac1b0000',
+            'real' => 5,
+            'bonus' => 0,
+            'provider' => 'paypal'
+        ]);
+
+        self::assertEquals(400, $this->client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * @group integration
+     */
+    public function testTransferBadReceiverUUIDAction()
+    {
+        $this->loginClient('jorge', 'iyoque123');
+
+        $this->client->request('POST',  '/api/v1/wallet/0cb00000-646e-11e6-a5a2-0000ac1b0000/transfer.json', [
+            'receiverWalletUuid' => '404',
+            'real' => 5,
+            'bonus' => 0,
+            'provider' => 'paypal'
+        ]);
+
+        self::assertEquals(400, $this->client->getResponse()->getStatusCode());
+    }
 
     /**
      * @group integration

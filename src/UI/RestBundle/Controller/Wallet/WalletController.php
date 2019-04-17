@@ -3,6 +3,7 @@
 namespace Leos\UI\RestBundle\Controller\Wallet;
 
 use Leos\Domain\Payment\Model\Deposit;
+use Leos\Domain\Wallet\ValueObject\WalletId;
 use Leos\Infrastructure\CommonBundle\Exception\Form\FormException;
 use Leos\UI\RestBundle\Controller\AbstractBusController;
 
@@ -255,5 +256,50 @@ class WalletController extends AbstractBusController
                 $fetcher->get('provider')
             )
         );
+    }
+
+    /**
+     * @ApiDoc(
+     *     resource = true,
+     *     section="Wallet",
+     *     description = "Transfer from a wallet to another wallet",
+     *     output = "Leos\Domain\Payment\Model\Withdrawal",
+     *     statusCodes = {
+     *       202 = "Returned when successful",
+     *       400 = "Returned when bad request",
+     *       404 = "Returned when wallet not found",
+     *       409 = "Returned when not enough founds"
+     *     }
+     * )
+     *
+     * @RequestParam(name="receiverWalletUuid", default="0",  description="Receiver wallet uuid")
+     * @RequestParam(name="real",               default="0",  description="Withdrawal amount")
+     * @RequestParam(name="currency",           default="EUR", description="Currency")
+     * @RequestParam(name="provider",           default="", description="Payment provider")
+     *
+     * @View(statusCode=202, serializerGroups={"Identifier", "Basic"})
+     *
+     * @param string $uid
+     * @param ParamFetcher $fetcher
+     *
+     * @return null
+     */
+    public function postTransferAction(string $uid, ParamFetcher $fetcher)
+    {
+        $withdrawalRequest = new Withdrawal(
+            $uid,
+            $fetcher->get('currency'),
+            (float) $fetcher->get('real'),
+            $fetcher->get('provider')
+        );
+
+        $depositRequest = new CreateDeposit(
+            $fetcher->get('receiverWalletUuid'),
+            $fetcher->get('currency'),
+            (float) $fetcher->get('real'),
+            $fetcher->get('provider')
+        );
+
+        return null;
     }
 }

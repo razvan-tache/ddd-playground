@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Leos\Domain\Transaction\Model;
 
+use DateTime;
 use Leos\Domain\Common\ValueObject\AggregateRoot;
 use Leos\Domain\Transaction\Event\TransactionWasCreated;
 use Leos\Domain\Wallet\Model\Wallet;
@@ -13,6 +14,7 @@ use Leos\Domain\Transaction\ValueObject\TransactionId;
 use Leos\Domain\Transaction\ValueObject\TransactionType;
 use Leos\Domain\Transaction\ValueObject\TransactionState;
 use Leos\Domain\Transaction\Exception\InvalidTransactionStateException;
+use LogicException;
 
 /**
  * Class Transaction
@@ -72,12 +74,12 @@ abstract class AbstractTransaction extends AggregateRoot
     protected $referralTransaction;
 
     /**
-     * @var \DateTime
+     * @var DateTime
      */
     protected $createdAt;
 
     /**
-     * @var null|\DateTime
+     * @var null|DateTime
      */
     protected $updatedAt;
 
@@ -96,7 +98,7 @@ abstract class AbstractTransaction extends AggregateRoot
         $this->prevBonus = $wallet->bonus();
         $this->currency = $real->currency();
         $this->process($real, $bonus);
-        $this->createdAt = new \DateTime();
+        $this->createdAt = new DateTime();
     }
 
     protected function raiseEvent(): void
@@ -141,7 +143,7 @@ abstract class AbstractTransaction extends AggregateRoot
                 break;
 
             default:
-                throw new \LogicException('transaction.exception.unknown_type');
+                throw new LogicException('transaction.exception.unknown_type');
         }
 
         $this->operationReal = $this->wallet->real()->diff($this->prevReal);
@@ -219,12 +221,12 @@ abstract class AbstractTransaction extends AggregateRoot
         return $this->currency;
     }
 
-    public function createdAt(): \DateTime
+    public function createdAt(): DateTime
     {
         return $this->createdAt;
     }
 
-    public function updatedAt(): ?\DateTime
+    public function updatedAt(): ?DateTime
     {
         return $this->updatedAt;
     }
