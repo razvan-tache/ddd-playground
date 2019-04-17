@@ -15,7 +15,7 @@ services:
       - "2323:22"
       - "9000:9000"
     volumes:
-      - "$PWD:/app"
+      - "../../../:/app"
     depends_on:
       - mysql
 
