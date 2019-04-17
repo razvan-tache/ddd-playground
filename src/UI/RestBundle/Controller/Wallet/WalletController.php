@@ -2,6 +2,7 @@
 
 namespace Leos\UI\RestBundle\Controller\Wallet;
 
+use Leos\Application\UseCase\Transaction\Request\Transfer;
 use Leos\Domain\Payment\Model\Deposit;
 use Leos\Domain\Wallet\ValueObject\WalletId;
 use Leos\Infrastructure\CommonBundle\Exception\Form\FormException;
@@ -286,18 +287,10 @@ class WalletController extends AbstractBusController
      */
     public function postTransferAction(string $uid, ParamFetcher $fetcher)
     {
-        $withdrawalRequest = new Withdrawal(
+        new Transfer(
             $uid,
-            $fetcher->get('currency'),
-            (float) $fetcher->get('real'),
-            $fetcher->get('provider')
-        );
-
-        $depositRequest = new CreateDeposit(
-            $fetcher->get('receiverWalletUuid'),
-            $fetcher->get('currency'),
-            (float) $fetcher->get('real'),
-            $fetcher->get('provider')
+            $fetcher->get("receiverWalletUuid"),
+            $fetcher->get("real")
         );
 
         return null;
