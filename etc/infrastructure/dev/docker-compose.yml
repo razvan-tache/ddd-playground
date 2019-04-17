@@ -1,4 +1,4 @@
-version: '2'
+version: '2.2'
 services:
   nginx:
     build: nginx
@@ -54,6 +54,8 @@ services:
     image: elasticsearch:5.5
     ports:
       - 9200:9200
+    environment:
+      ES_JAVA_OPTS: "-Xms750m -Xmx750m"
 
 volumes:
   db_data:
