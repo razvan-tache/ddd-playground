@@ -23,11 +23,17 @@ class Transfer
     /** @var string */
     private $provider;
 
-    public function __construct(string $senderWalletId, string $receiverWalletId, float $amount)
-    {
+    public function __construct(
+        string $senderWalletId,
+        string $receiverWalletId,
+        float $amount,
+        string $currency,
+        string $provider
+    ) {
         $this->senderWalletId = new WalletId($senderWalletId);
         $this->receiverWalletId = new WalletId($receiverWalletId);
-        $this->setReal($amount, new Currency("EUR"));
+        $this->setReal($amount, new Currency($currency));
+        $this->provider = $provider;
     }
 
     /**

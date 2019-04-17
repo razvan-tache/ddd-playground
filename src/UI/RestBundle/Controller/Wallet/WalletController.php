@@ -290,7 +290,9 @@ class WalletController extends AbstractBusController
         new Transfer(
             $uid,
             $fetcher->get("receiverWalletUuid"),
-            $fetcher->get("real")
+            $fetcher->get("real"),
+            $fetcher->get("currency"),
+            $fetcher->get("provider")
         );
 
         return null;

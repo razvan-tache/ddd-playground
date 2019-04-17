@@ -354,6 +354,7 @@ class WalletControllerTest extends JsonApiTestCase
         $this->client->request('POST',  '/api/v1/wallet/404/transfer.json', [
             'receiverWalledUid' => '0cb00000-646e-11e6-a5a2-0000ac1b0000',
             'real' => 5,
+            'currency' => "EUR",
             'provider' => 'paypal'
         ]);
 
@@ -370,6 +371,7 @@ class WalletControllerTest extends JsonApiTestCase
         $this->client->request('POST',  '/api/v1/wallet/0cb00000-646e-11e6-a5a2-0000ac1b0000/transfer.json', [
             'receiverWalletUuid' => '404',
             'real' => 5,
+            'currency' => "EUR",
             'provider' => 'paypal'
         ]);
 
@@ -383,11 +385,27 @@ class WalletControllerTest extends JsonApiTestCase
         $this->client->request('POST',  '/api/v1/wallet/0cb00000-646e-11e6-a5a2-0000ac1b0000/transfer.json', [
             'receiverWalletUuid' => '0cb00000-646e-11e6-a5a2-0000ac1b0001',
             'real' => 0,
+            'currency' => "EUR",
             'provider' => 'paypal'
         ]);
 
         self::assertEquals(400, $this->client->getResponse()->getStatusCode());
         self::assertContains('amount', $this->client->getResponse()->getContent());
+    }
+
+    public function testTransferInvalidCurrencyAction()
+    {
+        $this->loginClient('jorge', 'iyoque123');
+
+        $this->client->request('POST',  '/api/v1/wallet/0cb00000-646e-11e6-a5a2-0000ac1b0000/transfer.json', [
+            'receiverWalletUuid' => '0cb00000-646e-11e6-a5a2-0000ac1b0001',
+            'real' => 5,
+            'currency' => "EURASDAS",
+            'provider' => 'paypal'
+        ]);
+
+        self::assertEquals(400, $this->client->getResponse()->getStatusCode());
+        self::assertContains('currency', $this->client->getResponse()->getContent());
     }
 
     /**
