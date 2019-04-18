@@ -3,6 +3,7 @@
 namespace Tests\Leos\UI\RestBundle\Controller\Wallet;
 
 use Lakion\ApiTestCase\JsonApiTestCase;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Tests\Leos\UI\RestBundle\Controller\Security\SecurityTrait;
 
 /**
@@ -89,14 +90,8 @@ class WalletControllerTest extends JsonApiTestCase
 
         $userId = $this->users['jorge']->uuid()->__toString();
 
-        $this->client->request('POST', '/api/v1/wallet.json', [
-            'userId' => $userId
-        ]);
-
-        $response = $this->client->getResponse();
-        self::assertEquals(201, $response->getStatusCode());
-
-        $this->client->request('POST', $response->headers->get('location') . '/deposit.json', [
+        $getWalletRoute = $this->createWallet($userId);
+        $this->client->request('POST', $getWalletRoute . '/deposit.json', [
             'real' => 100,
             'provider' => 'paypal'
         ]);
@@ -148,19 +143,14 @@ class WalletControllerTest extends JsonApiTestCase
 
         $userId = $this->users['jorge']->uuid()->__toString();
 
-        $this->client->request('POST', '/api/v1/wallet.json', [
-            'userId' => $userId
-        ]);
+        $getWalletRoute = $this->createWallet($userId);
 
-        $response = $this->client->getResponse();
-        self::assertEquals(201, $response->getStatusCode());
-
-        $this->client->request('POST', $response->headers->get('location') . '/deposit.json', [
+        $this->client->request('POST', $getWalletRoute . '/deposit.json', [
             'real' => 50,
             'provider' => 'paypal'
         ]);
 
-        $this->client->request('POST', $response->headers->get('location') . '/withdrawal.json', [
+        $this->client->request('POST', $getWalletRoute . '/withdrawal.json', [
             'real' => 5,
             'provider' => 'paypal'
         ]);
@@ -177,19 +167,14 @@ class WalletControllerTest extends JsonApiTestCase
 
         $userId = $this->users['jorge']->uuid()->__toString();
 
-        $this->client->request('POST', '/api/v1/wallet.json', [
-            'userId' => $userId
-        ]);
+        $getWalletRoute = $this->createWallet($userId);
 
-        $response = $this->client->getResponse();
-        self::assertEquals(201, $response->getStatusCode());
-
-        $this->client->request('POST', $response->headers->get('location') . '/deposit.json', [
+        $this->client->request('POST', $getWalletRoute . '/deposit.json', [
             'real' => 50,
             'provider' => 'paypal'
         ]);
 
-        $this->client->request('POST', $response->headers->get('location') . '/withdrawal.json', [
+        $this->client->request('POST', $getWalletRoute . '/withdrawal.json', [
             'real' => 0,
             'provider' => 'paypal'
         ]);
@@ -207,15 +192,9 @@ class WalletControllerTest extends JsonApiTestCase
 
         $userId = $this->users['jorge']->uuid()->__toString();
 
-        $this->client->request('POST', '/api/v1/wallet.json', [
-            'userId' => $userId
-        ]);
+        $getWalletRoute = $this->createWallet($userId);
 
-        $response = $this->client->getResponse();
-
-        self::assertEquals(201, $response->getStatusCode());
-
-        $this->client->request('POST', $response->headers->get('location') . '/deposit.json', [
+        $this->client->request('POST', $getWalletRoute . '/deposit.json', [
             'real' => 50,
             'currency' => 'LIBRAS',
             'provider' => 'paypal'
@@ -235,15 +214,9 @@ class WalletControllerTest extends JsonApiTestCase
 
         $userId = $this->users['jorge']->uuid()->__toString();
 
-        $this->client->request('POST', '/api/v1/wallet.json', [
-            'userId' => $userId
-        ]);
+        $getWalletRoute = $this->createWallet($userId);
 
-        $response = $this->client->getResponse();
-
-        self::assertEquals(201, $response->getStatusCode());
-
-        $this->client->request('POST', $response->headers->get('location') . '/deposit.json', [
+        $this->client->request('POST', $getWalletRoute . '/deposit.json', [
             'real' => 0,
             'currency' => 'EUR',
             'provider' => 'paypal'
@@ -378,6 +351,9 @@ class WalletControllerTest extends JsonApiTestCase
         self::assertEquals(400, $this->client->getResponse()->getStatusCode());
     }
 
+    /**
+     * @group integration
+     */
     public function testTransferInvalidAmountAction()
     {
         $this->loginClient('jorge', 'iyoque123');
@@ -393,6 +369,9 @@ class WalletControllerTest extends JsonApiTestCase
         self::assertContains('amount', $this->client->getResponse()->getContent());
     }
 
+    /**
+     * @group integration
+     */
     public function testTransferInvalidCurrencyAction()
     {
         $this->loginClient('jorge', 'iyoque123');
@@ -406,6 +385,51 @@ class WalletControllerTest extends JsonApiTestCase
 
         self::assertEquals(400, $this->client->getResponse()->getStatusCode());
         self::assertContains('currency', $this->client->getResponse()->getContent());
+    }
+
+    /**
+     * @group integration
+     */
+    public function testTransferAction()
+    {
+        $this->loginClient('jorge', 'iyoque123');
+
+        $userId = $this->users['jorge']->uuid()->__toString();
+
+        $firstWalletRoute = $this->createWallet($userId);
+        $firstWalletUuid = substr($firstWalletRoute, strripos($firstWalletRoute, "/") + 1);
+        $this->client->request('POST', $firstWalletRoute . '/deposit.json', [
+            'real' => 50,
+            'provider' => 'paypal'
+        ]);
+
+        $secondWalletRoute = $this->createWallet($userId);
+        $secondWalletUuid = substr($secondWalletRoute, strripos($secondWalletRoute, "/") + 1);
+        $this->client->request('POST',  $firstWalletRoute . '/transfer.json', [
+            'receiverWalletUuid' => $secondWalletUuid,
+            'real' => 5,
+            'currency' => "EUR",
+            'provider' => 'paypal'
+        ]);
+
+        $sfResponse = $this->client->getResponse();
+
+        $this->assertResponseCode($sfResponse, 202);
+        $this->assertJson($sfResponse->getContent());
+
+        $responseData = json_decode($sfResponse->getContent(), true);
+
+        self::assertResponse(
+            new JsonResponse($responseData[$firstWalletUuid], $sfResponse->getStatusCode(), $sfResponse->headers->all()),
+            "Wallet/transfer_sender",
+            202
+        );
+
+        self::assertResponse(
+            new JsonResponse($responseData[$secondWalletUuid], $sfResponse->getStatusCode(), $sfResponse->headers->all()),
+            "Wallet/transfer_receiver",
+            202
+        );
     }
 
     /**
@@ -446,5 +470,17 @@ class WalletControllerTest extends JsonApiTestCase
         $this->client->request('GET', $location);
 
         self::assertResponse($this->client->getResponse(), $responseFile, $code);
+    }
+
+    private function createWallet(string $userId): string
+    {
+        $this->client->request('POST', '/api/v1/wallet.json', [
+            'userId' => $userId
+        ]);
+
+        $response = $this->client->getResponse();
+        self::assertEquals(201, $response->getStatusCode());
+
+        return $response->headers->get('location');
     }
 }

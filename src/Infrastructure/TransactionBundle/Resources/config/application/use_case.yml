@@ -29,3 +29,9 @@ services:
         autowire: true
         tags:
           - { name: tactician.handler, command: Leos\Application\UseCase\Transaction\Request\RollbackWithdrawal }
+
+    leos.use_case.create_transfer:
+      class: Leos\Application\UseCase\Transaction\CreateTransferHandler
+      autowire: true
+      tags:
+        - { name: tactician.handler, command: Leos\Application\UseCase\Transaction\Request\Transfer }

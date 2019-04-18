@@ -48,4 +48,24 @@ class Transfer
 
         $this->real = new Money($amount, $currency);
     }
+
+    public function getSenderWalletId(): WalletId
+    {
+        return $this->senderWalletId;
+    }
+
+    public function getReceiverWalletId(): WalletId
+    {
+        return $this->receiverWalletId;
+    }
+
+    public function getReal(): Money
+    {
+        return $this->real;
+    }
+
+    public function getProvider(): string
+    {
+        return $this->provider;
+    }
 }

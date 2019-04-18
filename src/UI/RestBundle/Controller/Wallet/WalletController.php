@@ -287,14 +287,12 @@ class WalletController extends AbstractBusController
      */
     public function postTransferAction(string $uid, ParamFetcher $fetcher)
     {
-        new Transfer(
+        return $this->handle(new Transfer(
             $uid,
             $fetcher->get("receiverWalletUuid"),
             $fetcher->get("real"),
             $fetcher->get("currency"),
             $fetcher->get("provider")
-        );
-
-        return null;
+        ));
     }
 }
